@@ -10,7 +10,7 @@ This project is an implementation of a Figma wireframe as a full-fledged React w
 - **Best Practices**: Followed accessibility standards and performance optimizations.
 
 ### Live Demo & GitHub Repository
-- **Live URL**: [https://catalog-assignment-frontend.netlify.app/](#)
+- **Live URL**: [https://catalog-assignment-frontend.netlify.app/](https://catalog-assignment-frontend.netlify.app/)
   
 ### Technologies Used
 - **React**: For UI development.
