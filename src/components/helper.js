@@ -1,8 +1,10 @@
 import axios from 'axios';
 
 
+
 // This is a helper function used to get the coin data from the coingecko api
 export async function getCoinsData(days) {
+    
     try {
         const response = await axios.get('https://api.coingecko.com/api/v3/coins/bitcoin/market_chart', {
             params: {
@@ -12,7 +14,7 @@ export async function getCoinsData(days) {
             },
             headers: {
                 accept: 'application/json',
-                'x-cg-demo-api-key': 'CG-XjQtrttCbWVpN53ukR2YEWTL'
+                'x-cg-demo-api-key': import.meta.env.VITE_API_KEY,
             }
         });
         // console.log(response)
