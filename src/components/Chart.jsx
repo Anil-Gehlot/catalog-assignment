@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { getCoinsData } from "./helper"; 
-import {  Area, XAxis, YAxis, CartesianGrid, Bar,Tooltip, ComposedChart } from "recharts";
+import { Area, XAxis, YAxis, CartesianGrid, Bar, Tooltip, ComposedChart, ReferenceLine } from "recharts";
 import fsi from "../assets/fullscreen-image.png";
 import ci from "../assets/comparison-image.png";
 
@@ -15,6 +15,9 @@ function Chart({ setCoinData }) {
   const [data, setData] = useState([]);
   const [activeButton, setActiveButton] = useState(365); 
   const [currentPrice, setCurrentPrice] = useState(0);
+
+  // added variables to show horizontal & vertical dotted line to show on the graph.
+  const [selectedPrice, setSelectedPrice] = useState(null);
 
   // This function is used to fetch the coin data according to the selected time, to show the graph.
   const fetchCoinData = async (days) => {
@@ -40,16 +43,14 @@ function Chart({ setCoinData }) {
   };
 
   // fetching coin data for the first time,  default 1 year.
-  useEffect(()=>{
+  useEffect(() => {
     fetchCoinData(365);
-  },[])
-  
-  
+  },[]);
 
   return (
     <div>
       <div className="action-container">
-        <div className='fs-comp'>
+        <div className="fs-comp">
           <div className="action-item">
             <img src={fsi} width={24} height={24} className="img" alt="Full Screen Icon" />
             <button className="fsiLabel"> Full Screen</button>
@@ -59,24 +60,33 @@ function Chart({ setCoinData }) {
             <button className="compare-img"> Compare</button>
           </div>
         </div>
-        <div className='days-cont'>
-          <button className={`days-btn ${activeButton === 1 ? 'active' : ''}`} onClick={() => fetchCoinData(1)}>1d</button>
-          <button className={`days-btn ${activeButton === 3 ? 'active' : ''}`} onClick={() => fetchCoinData(3)}>3d</button>
-          <button className={`days-btn ${activeButton === 7 ? 'active' : ''}`} onClick={() => fetchCoinData(7)}>1w</button>
-          <button className={`days-btn ${activeButton === 30 ? 'active' : ''}`} onClick={() => fetchCoinData(30)}>1m</button>
-          <button className={`days-btn ${activeButton === 182 ? 'active' : ''}`} onClick={() => fetchCoinData(182)}>6m</button>
-          <button className={`days-btn ${activeButton === 365 ? 'active' : ''}`} onClick={() => fetchCoinData(365)}>1y</button>
-          <button className={`days-btn ${activeButton === 'max' ? 'active' : ''}`} onClick={() => fetchCoinData(365)}>max</button>
+        <div className="days-cont">
+          <button className={`days-btn ${activeButton === 1 ? "active" : ""}`} onClick={() => fetchCoinData(1)}>1d</button>
+          <button className={`days-btn ${activeButton === 3 ? "active" : ""}`} onClick={() => fetchCoinData(3)}>3d</button>
+          <button className={`days-btn ${activeButton === 7 ? "active" : ""}`} onClick={() => fetchCoinData(7)}>1w</button>
+          <button className={`days-btn ${activeButton === 30 ? "active" : ""}`} onClick={() => fetchCoinData(30)}>1m</button>
+          <button className={`days-btn ${activeButton === 182 ? "active" : ""}`} onClick={() => fetchCoinData(182)}>6m</button>
+          <button className={`days-btn ${activeButton === 365 ? "active" : ""}`} onClick={() => fetchCoinData(365)}>1y</button>
+          <button className={`days-btn ${activeButton === "max" ? "active" : ""}`} onClick={() => fetchCoinData(365)}>max</button>
         </div>
       </div>
 
-
       {/* Showing the Graph */}
-      <div className={`Chart-container`} style ={{marginLeft: '-4%'}} >
-        <div style={{color:"#6F7177", padding:"2px", zIndex:9999, fontSize:"20px" , marginLeft: "60px"} }></div>
+      <div className={`Chart-container`} style={{ marginLeft: "-4%" }} >
+        <div style={{color: "#6F7177", padding: "2px", zIndex: 9999, fontSize: "20px", marginLeft: "60px"} }></div>
+
         {data.length > 0 && (
-          
-          <ComposedChart width={800} height={300} data={data}>
+
+          <ComposedChart width={800} height={300} data={data}
+
+            // functions to dynamically fetch & update the selected price coordinates to show horizontal and vertical line.
+            onMouseMove={(e) => {
+              if (e && e.activePayload && e.activePayload.length) {
+                setSelectedPrice(e.activePayload[0].payload);
+              }
+            }}
+            onMouseLeave={() => setSelectedPrice(null)}
+          >
             <defs>
 
               {/* showing linear gradient color below the graph */}
@@ -86,8 +96,8 @@ function Chart({ setCoinData }) {
               </linearGradient>
             </defs>
 
+            <CartesianGrid stroke="none" strokeDasharray="none" />
 
-            <CartesianGrid stroke="none" strokeDasharray='none' />
             <Area
               type="monotone"
               dataKey="price"
@@ -100,28 +110,62 @@ function Chart({ setCoinData }) {
             {/* Bar is showing the dark bars at the bottom of the graph. */}
             <Bar
               dataKey="reduced"
-              fill='#E6E8EB'
+              fill="#E6E8EB"
               barSize={50}
-              width={740} height={31.34}
+              width={740}
+              height={31.34}
             />
 
             {/* This both are tick as False, means we are not showing the measurement of X-axis and Y-axis */}
             <XAxis dataKey="volumes" tick={false} />
             <YAxis tick={false} />
-            
+
+            {/* Horizontal and verticle dotted lines for selected price */}
+            {selectedPrice && (
+              <>
+                <ReferenceLine x={selectedPrice.volumes} stroke="gray" strokeDasharray="7 3" />
+                <ReferenceLine y={selectedPrice.price} stroke="gray" strokeDasharray="7 3" />
+              </>
+            )}
+
+
             {/* to show cuurent price and selected price */}
-            <Tooltip position={{ x:780, y:90 }} content={({ active, payload }) => {
-              if (active && payload && payload.length) {
-                const { price } = payload[0].payload;
-                return (
-                  <div className="custom-tooltip" >
-                    <p style={{ color: "white", backgroundColor: "#1A243A", fontSize: 18, padding: "2px 8px", borderRadius: "5px" }}>{formatNumber(price)}</p>
-                    <p style={{color:"white", backgroundColor:"#4B40EE", padding:"2px 8px", borderRadius:"5px", marginTop:"30%"}}>{formatNumber(currentPrice)}</p>
-                  </div>
-                );
-              }
-              return null;
-            }} />
+            <Tooltip
+              cursor={false} // To hide the vertical line, shown by Tooltip by default
+              position={{ x: 780, y: 90 }}
+              content={({ active, payload }) => {
+                if (active && payload && payload.length) {
+                  const { price } = payload[0].payload;
+                  return (
+                    <div className="custom-tooltip">
+                      <p
+                        style={{
+                          color: "white",
+                          backgroundColor: "#1A243A",
+                          fontSize: 18,
+                          padding: "2px 8px",
+                          borderRadius: "5px",
+                        }}
+                      >
+                        {formatNumber(price)}
+                      </p>
+                      <p
+                        style={{
+                          color: "white",
+                          backgroundColor: "#4B40EE",
+                          padding: "2px 8px",
+                          borderRadius: "5px",
+                          marginTop: "30%",
+                        }}
+                      >
+                        {formatNumber(currentPrice)}
+                      </p>
+                    </div>
+                  );
+                }
+                return null;
+              }}
+            />
           </ComposedChart>
         )}
       </div>
